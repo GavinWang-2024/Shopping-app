@@ -1,0 +1,7 @@
+# jwt-decode
+# django
+# djangorestframework
+# react
+# djangorestframework_simplejwt
+# corsheaders
+# djangorestframework_simplejwt blacklist
