@@ -5,3 +5,5 @@
 # djangorestframework_simplejwt
 # corsheaders
 # djangorestframework_simplejwt blacklist
+#axios
+#tailwind

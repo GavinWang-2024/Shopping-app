@@ -19,7 +19,7 @@ interface AuthProviderProps{
     children:ReactNode;
 }
 
-const AuthContext=createContext<AuthContextType|undefined>(undefined)
+const AuthContext=createContext<AuthContextType|undefined>(undefined); //maybe null
 export default AuthContext;
 
 
@@ -43,6 +43,7 @@ export const AuthProvider:React.FC<AuthProviderProps>= ({children}) => {
         const username = formData.get('username') as string;
         const password = formData.get('password') as string;
         try {
+            console.log("making a login request");
             const response = await fetch('http://127.0.0.1:8000/api/token/', {
                 method: 'POST',
                 headers: {
@@ -67,26 +68,51 @@ export const AuthProvider:React.FC<AuthProviderProps>= ({children}) => {
         localStorage.removeItem('authTokens');
         navigate('/login');
     }
-
-    let updateToken = async ()=>{
+    let updateToken = async (): Promise<void> => {
         console.log("Update token called");
-        const response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({'refresh': authTokens?.refresh})
-        });
-        const data = await response.json();
-        if(response.status===200){
-            setAuthTokens(data);
-            setUser(jwtDecode(data.access));
-            localStorage.setItem('authTokens',JSON.stringify(data));
-        }else{
+        try {
+            const storedTokensString: string | null = localStorage.getItem('authTokens');
+            if (!storedTokensString) {
+                console.error("No stored tokens found.");
+                logoutUser();
+                return;
+            }
+    
+            const storedTokens: AuthTokens = JSON.parse(storedTokensString);
+            console.log("Stored refresh token:", storedTokens.refresh);
+    
+            if (!storedTokens.refresh) {
+                console.error("No refresh token found.");
+                logoutUser();
+                return;
+            }
+    
+            const response: Response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 'refresh': storedTokens.refresh })
+            });
+    
+            const data: AuthTokens = await response.json();
+            console.log("Server response:", response.status, data);
+    
+            if (response.status === 200) {
+                setAuthTokens(data);
+                setUser(jwtDecode<User>(data.access));
+                localStorage.setItem('authTokens', JSON.stringify(data));
+            } else {
+                console.error("Token refresh failed:", data);
+                logoutUser();
+            }
+        } catch (error) {
+            console.error("Error during token refresh:", error);
             logoutUser();
-        }
-        if(loading){
-            setLoading(false);
+        } finally {
+            if (loading) {
+                setLoading(false);
+            }
         }
     }
 
