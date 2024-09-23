@@ -1,9 +1,4 @@
-# jwt-decode
-# django
-# djangorestframework
-# react
-# djangorestframework_simplejwt
-# corsheaders
-# djangorestframework_simplejwt blacklist
-#axios
-#tailwind
+Django==4.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+django-cors-headers==3.13.0
